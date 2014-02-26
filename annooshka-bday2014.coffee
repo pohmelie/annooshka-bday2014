@@ -12,7 +12,7 @@ $(() ->
     ctx.fillStyle = "#00F"
     ctx.strokeStyle = "#F00"
     ctx.font = "30pt Arial"
-    ctx.fillText("#{w}x#{h}", 0, 100)
+    ctx.fillText("#{w}x#{h} #{window.devicePixelRatio}", 0, 100)
 
     ctx.lineWidth = 2
     ctx.strokeStyle = "#ffffff"
