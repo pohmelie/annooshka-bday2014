@@ -2,7 +2,6 @@ $(() ->
 
     $("body").css("background", "#293134")
 
-    img = new Image()
     ctx = $("#area")[0].getContext("2d")
 
     w = $(window).width() - 20
