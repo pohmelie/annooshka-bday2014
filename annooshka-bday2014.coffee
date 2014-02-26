@@ -6,6 +6,7 @@ $(() ->
 
     w = $(window).width() - 20
     h = $(window).height() - 20
+
     ctx.canvas.width = w
     ctx.canvas.height = h
 
