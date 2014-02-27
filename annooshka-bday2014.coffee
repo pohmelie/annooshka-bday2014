@@ -1,30 +1,10 @@
 #= require <blocks.coffee>
 
 
-draw_ellipse_by_center = (ctx, cx, cy, w, h) ->
-
-    draw_ellipse(ctx, cx - w/2.0, cy - h/2.0, w, h)
-
-draw_ellipse = (ctx, x, y, w, h) ->
-
-    kappa = .5522848
-    ox = (w / 2) * kappa  # control point offset horizontal
-    oy = (h / 2) * kappa  # control point offset vertical
-    xe = x + w            # x-end
-    ye = y + h            # y-end
-    xm = x + w / 2        # x-middle
-    ym = y + h / 2        # y-middle
-
-    ctx.moveTo(x, ym)
-    ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y)
-    ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym)
-    ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye)
-    ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym)
-
-
 class Background
 
     constructor: (@color) ->
+
 
     redraw: (ctx) ->
 
@@ -34,29 +14,91 @@ class Background
 
 class Platform
 
-    constructor: (@x, @y, @width, @height, @delta) ->
+    constructor: (@x, @y, @width, @radius, @sa, @ea, @delta) ->
 
-    step_left: () ->
+        $(window).on("keydown", @keydown)
+        $(window).on("keyup", @keyup)
+        $("#area").on("mousedown", @touch)
+        $("#area").on("mouseup", @untouch)
+
+
+    touch: (e) =>
+
+        if e.clientX > e.currentTarget.clientWidth / 2
+
+            @action = @step_right
+
+        else
+
+            @action = @step_left
+
+        @down = true
+
+
+    untouch: (e) =>
+
+        @down = false
+
+
+    keydown: (e) =>
+
+        switch e.which
+
+            when 39, "d"  # right
+
+                @action = @step_right
+                @down = true
+                e.preventDefault()
+
+            when 37, "a"  # left
+
+                @action = @step_left
+                @down = true
+                e.preventDefault()
+
+
+    keyup: (e) =>
+
+        @down = false
+
+
+    make_action: (ctx) ->
+
+        @action?(ctx)
+        if not @down
+
+            @action = null
+
+
+    step_left: (ctx) =>
 
         @x = Math.max(0, @x - @delta)
 
-    step_right: () ->
 
-        @x = Math.min(ctx.canvas.width - @width, @delta)
+    step_right: (ctx) =>
+
+        @x = Math.min(ctx.canvas.width - @width, @x + @delta)
+
 
     redraw: (ctx) ->
 
+        ctx.beginPath()
+        ctx.moveTo(@x, @y)
+        ctx.arc(@x, @y, @radius, @sa, @ea, false)
+        ctx.closePath()
         ctx.fillStyle = "#fff"
-        ctx.fillRect(@x, @y, @width, @height)
+        ctx.fill()
 
 
 class Block
 
     constructor: (@x, @y, @radius, @type) ->
 
+
     shot: () ->
 
         @type = Math.max(-1, @type - 1)
+
 
     redraw: (ctx) ->
 
@@ -79,6 +121,7 @@ class Block
         # draw_ellipse_by_center(ctx, @x, @y, @width, @height)
         ctx.closePath()
         ctx.fill()
+
 
     @build_blocks_from_map: (map, sx, sy, radius) ->
 
@@ -119,10 +162,12 @@ class Ball
 
     constructor: (@x, @y, @dx, @dy, @radius) ->
 
+
     redraw: (ctx) ->
 
         ctx.beginPath()
         ctx.arc(@x, @y, @radius, 0, 2 * Math.PI, false)
+        ctx.lineTo(@x, @y)
         ctx.closePath()
         ctx.fillStyle = "#00f"
         ctx.fill()
@@ -132,14 +177,22 @@ class Game
 
     constructor: (@ctx, @static_objects, @platform, @ball, @w, @h, @interval=30) ->
 
-        setInterval(@iteration, @interval)
+        @timer = setInterval(@iteration, @interval)
+
 
     iteration: () =>
+
+        @platform.make_action(@ctx)
 
         @static_objects.forEach((e) => e.redraw(@ctx))
         @ball.redraw(@ctx)
         @platform.redraw(@ctx)
         @ball.redraw(@ctx)
+
+
+    stop: () =>
+
+        clearInterval(@timer)
 
 
 resize_blocks = (blocks_map, w, h) ->
@@ -166,8 +219,7 @@ resize_blocks = (blocks_map, w, h) ->
 
         return [lines, blk_diameter_w / 2]
 
-
-$(() ->
+init = () ->
 
     $("body").css("background", "#293134")
 
@@ -186,10 +238,16 @@ $(() ->
     g = new Game(
         ctx,
         static_objects,
-        new Platform(w * 0.9 / 2, h * 0.975 - 5, w * 0.1, h * 0.025, 5),
-        new Ball(w / 2, h * 0.8, 1, -1, 10),
+        new Platform(w / 2, 2 * h, h * 0.02, h * 1.025, 1.45 * Math.PI, 1.55 * Math.PI, w * 0.03),
+        new Ball(w / 2, h * 0.8, 1, -1, radius),
         w,
         h
     )
 
-)
+    $(window).resize(() =>
+        g.stop()
+        init()
+    )
+
+
+$(init)
