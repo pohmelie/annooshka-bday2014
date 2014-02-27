@@ -180,7 +180,7 @@
       ncount = w / blk_diameter_h;
       dcount = ncount - lines[0].length;
       extra = "";
-      for (_ = _i = 0, _ref = dcount / 2; 0 <= _ref ? _i < _ref : _i > _ref; _ = 0 <= _ref ? ++_i : --_i) {
+      for (_ = _i = 0, _ref = Math.floor(dcount / 2); 0 <= _ref ? _i < _ref : _i > _ref; _ = 0 <= _ref ? ++_i : --_i) {
         extra += ".";
       }
       for (i = _j = 0, _ref1 = lines.length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {

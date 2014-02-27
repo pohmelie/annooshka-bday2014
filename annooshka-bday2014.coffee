@@ -152,7 +152,7 @@ resize_blocks = (blocks_map, w, h) ->
         ncount = w / blk_diameter_h
         dcount = ncount - lines[0].length
         extra = ""
-        for _ in [0...dcount / 2]
+        for _ in [0...Math.floor(dcount / 2)]
 
             extra += "."
 
