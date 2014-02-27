@@ -1,16 +1,16 @@
 class Background
 
-    constructor: (@ctx, @color) ->
+    constructor: (@color) ->
 
-    redraw: () ->
+    redraw: (ctx) ->
 
-        @ctx.fillStyle = @color
-        @ctx.fillRect(0, 0, @ctx.canvas.width, @ctx.canvas.height)
+        ctx.fillStyle = @color
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
 
 class Platform
 
-    constructor: (@ctx, @x, @y, @width, @height, @delta) ->
+    constructor: (@x, @y, @width, @height, @delta) ->
 
     step_left: () ->
 
@@ -18,42 +18,41 @@ class Platform
 
     step_right: () ->
 
-        @x = Math.min(@ctx.canvas.width - @width, @delta)
+        @x = Math.min(ctx.canvas.width - @width, @delta)
 
-    redraw: () ->
+    redraw: (ctx) ->
 
-        console.log(@, @ctx)
-        @ctx.fillStyle = "#fff"
-        @ctx.fillRect(@x, @y, @width, @height)
+        ctx.fillStyle = "#fff"
+        ctx.fillRect(@x, @y, @width, @height)
 
 
 class Block
 
-    constructor: (@ctx, @x, @y, @width, @height, @type) ->
+    constructor: (@x, @y, @width, @height, @type) ->
 
     shot: () ->
 
         @type = Math.max(-1, @type - 1)
 
-    redraw: () ->
+    redraw: (ctx) ->
 
         switch @type
 
             when 1
 
-                @ctx.fillStyle = "#f00"
+                ctx.fillStyle = "#f00"
 
             when 0
 
-                @ctx.fillStyle = "#0f0"
+                ctx.fillStyle = "#0f0"
 
             when -1
 
                 return
 
-        @ctx.fillRect(@x, @y, @width, @height)
+        ctx.fillRect(@x, @y, @width, @height)
 
-    @build_blocks_from_map: (map, ctx, sx, sy, width, height) ->
+    @build_blocks_from_map: (map, sx, sy, width, height) ->
 
         blocks = []
         iy = 0
@@ -75,7 +74,6 @@ class Block
 
                 blocks.push(
                     new Block(
-                        ctx,
                         sx + ix * width,
                         sy + iy * height,
                         width,
@@ -88,6 +86,32 @@ class Block
             iy += 1
 
         return blocks
+
+
+class Ball
+
+    constructor: (@x, @y, @dx, @dy, @radius) ->
+
+    redraw: (ctx) ->
+
+        ctx.beginPath()
+        ctx.arc(@x, @y, @radius, 0, 2 * Math.PI, false)
+        ctx.fillStyle = "#00f"
+        ctx.fill()
+
+
+class Game
+
+    constructor: (@ctx, @static_objects, @platform, @ball, @w, @h, @interval=30) ->
+
+        setInterval(@iteration, @interval)
+
+    iteration: () =>
+
+        @static_objects.forEach((e) => e.redraw(@ctx))
+        @ball.redraw(@ctx)
+        @platform.redraw(@ctx)
+        @ball.redraw(@ctx)
 
 
 $(() ->
@@ -103,21 +127,26 @@ $(() ->
     ctx.canvas.height = h
 
     blocks_map = '''
-        ..................
-        .......##.##......
-        ......#..#..#.....
-        .......#...#......
-        ........#.#.......
-        .........#........
-        ..................
+        .................
+        ......##.##......
+        .....#..#..#.....
+        ......#...#......
+        .......#.#.......
+        ........#........
+        .................
     '''
 
-    b = new Background(ctx, "#293134")
+    static_objects = [new Background("#293134")]
     blk_width = w / blocks_map.split("\n")[0].length
-    blks = Block.build_blocks_from_map(blocks_map, ctx, 0, 0, blk_width, h / 12)
-    p = new Platform(ctx, w * 0.9 / 2, h * 0.975 - 5, w * 0.1, h * 0.025, 5)
-    b.redraw()
-    blks.forEach((blk) -> blk.redraw())
-    p.redraw()
+    static_objects = static_objects.concat(Block.build_blocks_from_map(blocks_map, 0, 0, blk_width, h / 12))
+
+    g = new Game(
+        ctx,
+        static_objects,
+        new Platform(w * 0.9 / 2, h * 0.975 - 5, w * 0.1, h * 0.025, 5),
+        new Ball(w / 2, h * 0.8, 1, -1, 10),
+        w,
+        h
+    )
 
 )
