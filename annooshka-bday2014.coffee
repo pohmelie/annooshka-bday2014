@@ -163,6 +163,11 @@ class Ball
     constructor: (@x, @y, @dx, @dy, @radius) ->
 
 
+    step: (ctx) ->
+
+        @x += @dx
+        @y += @dy
+
     redraw: (ctx) ->
 
         ctx.beginPath()
@@ -173,22 +178,17 @@ class Ball
         ctx.fill()
 
 
-class Game
+class Scene
 
-    constructor: (@ctx, @static_objects, @platform, @ball, @w, @h, @interval=30) ->
+    constructor: (@ctx, @objects, @w, @h, @interval=30) ->
 
         @timer = setInterval(@iteration, @interval)
 
 
     iteration: () =>
 
-        @platform.make_action(@ctx)
-
-        @static_objects.forEach((e) => e.redraw(@ctx))
-        @ball.redraw(@ctx)
-        @platform.redraw(@ctx)
-        @ball.redraw(@ctx)
-
+        @objects.forEach((e) => e.step?(@ctx))
+        @objects.forEach((e) => e.redraw(@ctx))
 
     stop: () =>
 
@@ -231,15 +231,16 @@ init = () ->
     ctx.canvas.width = w
     ctx.canvas.height = h
 
-    static_objects = [new Background("#293134")]
     [blocks, radius] = resize_blocks(blocks_map, w, h)
-    static_objects = static_objects.concat(Block.build_blocks_from_map(blocks, 0, 0, radius))
-
-    g = new Game(
-        ctx,
-        static_objects,
-        new Platform(w / 2, 2 * h, h * 0.02, h * 1.025, 1.45 * Math.PI, 1.55 * Math.PI, w * 0.03),
+    objects = [].concat(
+        new Background("#293134"),
+        Block.build_blocks_from_map(blocks, 0, 0, radius),
         new Ball(w / 2, h * 0.8, 1, -1, radius),
+    )
+
+    g = new Scene(
+        ctx,
+        objects,
         w,
         h
     )
