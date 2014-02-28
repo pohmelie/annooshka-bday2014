@@ -193,7 +193,7 @@ generate_ball = (radius, w, h) ->
 
     return new Ball(
         radius + (w - 2 * radius) * Math.random(),
-        h / 2 * (1 + Math.random()),
+        h / 4 * (3 + Math.random()),
         h * 0.01 * (Math.random() * 2 - 1),
         h * 0.01 * (Math.random() * 2 - 1),
         radius
@@ -222,7 +222,7 @@ resize_blocks = (blocks_map, w, h) ->
 
     lines = blocks_map.split("\n")
     blk_diameter_w = w / lines[0].length
-    blk_diameter_h = h / lines.length / 2
+    blk_diameter_h = h / lines.length / 4 * 3
     if blk_diameter_w > blk_diameter_h
 
         ncount = w / blk_diameter_h

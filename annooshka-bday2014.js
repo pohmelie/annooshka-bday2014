@@ -4,7 +4,7 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  blocks_map = '.................................................\n.................#####.....#####.................\n.......ooooo....#.....##.##.....#..ooooo..ooooo..\n......o....o....#.......#.......#....o...o....o..\n.......ooooo.....##...........##.....o....ooooo..\n.........o.o.......##.......##.......o......o.o..\n.......oo..o.........##...##.........o....oo..o..\n.......................#.#.......................\n........................#........................\n.................................................';
+  blocks_map = '.................................................\n.................................................\n.................................................\n.................#####.....#####.................\n.......ooooo....#.....##.##.....#..ooooo..ooooo..\n......o....o....#.......#.......#....o...o....o..\n.......ooooo.....##...........##.....o....ooooo..\n.........o.o.......##.......##.......o......o.o..\n.......oo..o.........##...##.........o....oo..o..\n.......................#.#.......................\n........................#........................\n.................................................\n.................................................\n.................................................';
 
   Background = (function() {
     function Background(color) {
@@ -188,7 +188,7 @@
   })();
 
   generate_ball = function(radius, w, h) {
-    return new Ball(radius + (w - 2 * radius) * Math.random(), h / 2 * (1 + Math.random()), h * 0.01 * (Math.random() * 2 - 1), h * 0.01 * (Math.random() * 2 - 1), radius);
+    return new Ball(radius + (w - 2 * radius) * Math.random(), h / 4 * (3 + Math.random()), h * 0.01 * (Math.random() * 2 - 1), h * 0.01 * (Math.random() * 2 - 1), radius);
   };
 
   Scene = (function() {
@@ -228,7 +228,7 @@
     var blk_diameter_h, blk_diameter_w, dcount, extra, i, lines, ncount, _, _i, _j, _ref, _ref1;
     lines = blocks_map.split("\n");
     blk_diameter_w = w / lines[0].length;
-    blk_diameter_h = h / lines.length / 2;
+    blk_diameter_h = h / lines.length / 4 * 3;
     if (blk_diameter_w > blk_diameter_h) {
       ncount = w / blk_diameter_h;
       dcount = ncount - lines[0].length;
