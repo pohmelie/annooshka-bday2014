@@ -150,7 +150,8 @@
           } else if (o.block && o.visible()) {
             Ball.symmetric_collide(this, o.x, o.y);
             o.shot();
-            if (objs.length < 800) {
+            if (objs.length < 760) {
+              console.log(objs.length);
               objs.push(generate_ball(this.radius, w, h));
             }
           }

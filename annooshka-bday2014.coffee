@@ -152,8 +152,9 @@ class Ball
 
                     Ball.symmetric_collide(@, o.x, o.y)
                     o.shot()
-                    if objs.length < 800
+                    if objs.length < 760
 
+                        console.log(objs.length)
                         objs.push(generate_ball(@radius, w, h))
 
             ncollided.push(o)
