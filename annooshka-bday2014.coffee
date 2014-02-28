@@ -152,9 +152,8 @@ class Ball
 
                     Ball.symmetric_collide(@, o.x, o.y)
                     o.shot()
-                    if objs.length < 760
+                    if balls_count < 22
 
-                        console.log(objs.length)
                         objs.push(generate_ball(@radius, w, h))
 
             ncollided.push(o)
@@ -245,6 +244,8 @@ resize_blocks = (blocks_map, w, h) ->
     else
 
         return [lines, blk_diameter_w / 2]
+
+balls_count = 1
 
 init = () ->
 
