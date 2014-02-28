@@ -150,6 +150,9 @@
           } else if (o.block && o.visible()) {
             Ball.symmetric_collide(this, o.x, o.y);
             o.shot();
+            if (objs.length < 800) {
+              objs.push(generate_ball(this.radius, w, h));
+            }
           }
         }
         ncollided.push(o);
@@ -256,7 +259,7 @@
     ctx.canvas.height = h;
     _ref = resize_blocks(blocks_map, w, h), blocks = _ref[0], radius = _ref[1];
     objects = [].concat(new Background("#293134"), Block.build_blocks_from_map(blocks, 0, 0, radius));
-    for (_ = _i = 0; _i < 30; _ = ++_i) {
+    for (_ = _i = 0; _i < 1; _ = ++_i) {
       objects.push(generate_ball(radius, w, h));
     }
     g = new Scene(ctx, objects, w, h);

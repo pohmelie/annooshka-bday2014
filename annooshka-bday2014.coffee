@@ -152,6 +152,9 @@ class Ball
 
                     Ball.symmetric_collide(@, o.x, o.y)
                     o.shot()
+                    if objs.length < 800
+
+                        objs.push(generate_ball(@radius, w, h))
 
             ncollided.push(o)
 
@@ -260,7 +263,7 @@ init = () ->
         Block.build_blocks_from_map(blocks, 0, 0, radius),
     )
 
-    for _ in [0...30]
+    for _ in [0...1]
 
         objects.push(generate_ball(radius, w, h))
 
