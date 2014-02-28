@@ -151,6 +151,7 @@
             Ball.symmetric_collide(this, o.x, o.y);
             o.shot();
             if (balls_count < 22) {
+              balls_count += 1;
               objs.push(generate_ball(this.radius, w, h));
             }
           }

@@ -154,6 +154,7 @@ class Ball
                     o.shot()
                     if balls_count < 22
 
+                        balls_count += 1
                         objs.push(generate_ball(@radius, w, h))
 
             ncollided.push(o)
