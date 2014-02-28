@@ -12,92 +12,23 @@ class Background
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
 
-class Platform
-
-    constructor: (@x, @y, @width, @radius, @sa, @ea, @delta) ->
-
-        $(window).on("keydown", @keydown)
-        $(window).on("keyup", @keyup)
-        $("#area").on("mousedown", @touch)
-        $("#area").on("mouseup", @untouch)
-
-
-    touch: (e) =>
-
-        if e.clientX > e.currentTarget.clientWidth / 2
-
-            @action = @step_right
-
-        else
-
-            @action = @step_left
-
-        @down = true
-
-
-    untouch: (e) =>
-
-        @down = false
-
-
-    keydown: (e) =>
-
-        switch e.which
-
-            when 39, "d"  # right
-
-                @action = @step_right
-                @down = true
-                e.preventDefault()
-
-            when 37, "a"  # left
-
-                @action = @step_left
-                @down = true
-                e.preventDefault()
-
-
-    keyup: (e) =>
-
-        @down = false
-
-
-    make_action: (ctx) ->
-
-        @action?(ctx)
-        if not @down
-
-            @action = null
-
-
-    step_left: (ctx) =>
-
-        @x = Math.max(0, @x - @delta)
-
-
-    step_right: (ctx) =>
-
-        @x = Math.min(ctx.canvas.width - @width, @x + @delta)
-
-
-    redraw: (ctx) ->
-
-        ctx.beginPath()
-        ctx.moveTo(@x, @y)
-        ctx.arc(@x, @y, @radius, @sa, @ea, false)
-        ctx.closePath()
-        ctx.fillStyle = "#fff"
-        ctx.fill()
-
-
 class Block
 
     constructor: (@x, @y, @radius, @type) ->
 
+        @block = true
+
 
     shot: () ->
 
-        @type = Math.max(-1, @type - 1)
+        if @type != 1
+
+            @type = Math.max(-1, @type - 1)
+
+
+    visible: () ->
+
+        return @type != -1
 
 
     redraw: (ctx) ->
@@ -106,11 +37,11 @@ class Block
 
             when 1
 
-                ctx.fillStyle = "#f00"
+                ctx.fillStyle = "#ff2020"
 
-            when 0
+            when 0, 2
 
-                ctx.fillStyle = "#0f0"
+                ctx.fillStyle = "#83ff53"
 
             when -1
 
@@ -118,7 +49,6 @@ class Block
 
         ctx.beginPath()
         ctx.arc(@x, @y, @radius, 0, 2 * Math.PI, false)
-        # draw_ellipse_by_center(ctx, @x, @y, @width, @height)
         ctx.closePath()
         ctx.fill()
 
@@ -143,6 +73,10 @@ class Block
 
                         n = 1
 
+                    when "o"
+
+                        n = 2
+
                 blocks.push(
                     new Block(
                         sx + ix * radius * 2,
@@ -162,6 +96,83 @@ class Ball
 
     constructor: (@x, @y, @dx, @dy, @radius) ->
 
+        @ball = true
+        @collided = []
+
+
+    distance: (obj) ->
+
+        return Math.sqrt(Math.pow(@x - obj.x, 2) + Math.pow(@y - obj.y, 2))
+
+
+    check_collision: (obj) ->
+
+        return @distance(obj) <= @radius + obj.radius
+
+
+    @projection: (x1, y1, x2, y2, x3, y3, direction) ->
+
+        l = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+        sin = (y2 - y1) / l
+        cos = (x2 - x1) / l
+        nx = x3 * cos + y3 * sin
+        ny = -x3 * sin + y3 * cos
+        return [nx, ny]
+
+
+    @collide: (o1, o2) ->
+
+        [beat1, static1] = Ball.projection(o1.x, o1.y, o2.x, o2.y, o1.dx, o1.dy)
+        [beat2, static2] = Ball.projection(o1.x, o1.y, o2.x, o2.y, o2.dx, o2.dy)
+        [o1.dx, o1.dy] = Ball.projection(o1.x, o2.y, o2.x, o1.y, beat2, static1)
+        [o2.dx, o2.dy] = Ball.projection(o1.x, o2.y, o2.x, o1.y, beat1, static2)
+
+
+    @symmetric_collide: (o, x, y) ->
+
+        [beat, stat] = Ball.projection(o.x, o.y, x, y, o.dx, o.dy)
+        [o.dx, o.dy] = Ball.projection(o.x, y, x, o.y, -beat, stat)
+
+
+    calc_collisions: (objs, w, h) ->
+
+        ncollided = []
+        for o in objs.filter((o) => @ isnt o and @check_collision(o))
+
+            if o not in @collided
+
+                if o.ball
+
+                    if @ not in o.collided
+
+                        Ball.collide(@, o)
+                        @collided.push(o)
+
+                else if o.block and o.visible()
+
+                    Ball.symmetric_collide(@, o.x, o.y)
+                    o.shot()
+
+            ncollided.push(o)
+
+        @collided = ncollided
+
+        if @x < @radius and @dx < 0
+
+            Ball.symmetric_collide(@, -10, @y)
+
+        if @x > w - @radius and @dx > 0
+
+            Ball.symmetric_collide(@, w + 10, @y)
+
+        if @y < @radius and @dy < 0
+
+            Ball.symmetric_collide(@, @x, -10)
+
+        if @y > h - @radius and @dy > 0
+
+            Ball.symmetric_collide(@, @x, h + 10)
+
 
     step: (ctx) ->
 
@@ -174,21 +185,33 @@ class Ball
         ctx.arc(@x, @y, @radius, 0, 2 * Math.PI, false)
         ctx.lineTo(@x, @y)
         ctx.closePath()
-        ctx.fillStyle = "#00f"
+        ctx.fillStyle = "#63bfc7"
         ctx.fill()
+
+
+generate_ball = (radius, w, h) ->
+
+    return new Ball(
+        radius + (w - 2 * radius) * Math.random(),
+        h / 2 * (1 + Math.random()),
+        h * 0.01 * (Math.random() * 2 - 1),
+        h * 0.01 * (Math.random() * 2 - 1),
+        radius
+    )
 
 
 class Scene
 
-    constructor: (@ctx, @objects, @w, @h, @interval=30) ->
+    constructor: (@ctx, @objects, @w, @h, @interval=100) ->
 
         @timer = setInterval(@iteration, @interval)
 
 
     iteration: () =>
 
-        @objects.forEach((e) => e.step?(@ctx))
-        @objects.forEach((e) => e.redraw(@ctx))
+        @objects.forEach((o) => o.calc_collisions?(@objects, @w, @h))
+        @objects.forEach((o) => o.step?(@ctx))
+        @objects.forEach((o) => o.redraw(@ctx))
 
     stop: () =>
 
@@ -235,8 +258,11 @@ init = () ->
     objects = [].concat(
         new Background("#293134"),
         Block.build_blocks_from_map(blocks, 0, 0, radius),
-        new Ball(w / 2, h * 0.8, 1, -1, radius),
     )
+
+    for _ in [0...30]
+
+        objects.push(generate_ball(radius, w, h))
 
     g = new Scene(
         ctx,
