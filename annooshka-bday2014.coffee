@@ -21,7 +21,7 @@ class Block
 
     shot: () ->
 
-        if @type != 1
+        if @type != 2
 
             @type = Math.max(-1, @type - 1)
 
@@ -35,11 +35,15 @@ class Block
 
         switch @type
 
-            when 1
+            when 1, 4
+
+                ctx.fillStyle = "#6363c7"
+
+            when 2
 
                 ctx.fillStyle = "#ff2020"
 
-            when 0, 2
+            when 0, 3
 
                 ctx.fillStyle = "#83ff53"
 
@@ -61,21 +65,7 @@ class Block
 
             ix = 0.5
             blocks_line = []
-            for ch in line
-
-                switch ch
-
-                    when "."
-
-                        n = 0
-
-                    when "#"
-
-                        n = 1
-
-                    when "o"
-
-                        n = 2
+            for n in line
 
                 blocks.push(
                     new Block(
@@ -195,9 +185,17 @@ class Ball
 
 generate_ball = (radius, w, h) ->
 
+    if Math.random() < 0.5
+
+        y = h / 8 * (7 + Math.random())
+
+    else
+
+        y = h / 8 * Math.random()
+
     return new Ball(
         radius + (w - 2 * radius) * Math.random(),
-        h / 4 * (3 + Math.random()),
+        y,
         h * 0.01 * (Math.random() * 2 - 1),
         h * 0.01 * (Math.random() * 2 - 1),
         radius
@@ -222,29 +220,36 @@ class Scene
         clearInterval(@timer)
 
 
-resize_blocks = (blocks_map, w, h) ->
+parse_blocks = (blocks_map, w, h) ->
 
-    lines = blocks_map.split("\n")
-    blk_diameter_w = w / lines[0].length
-    blk_diameter_h = h / lines.length / 4 * 3
-    if blk_diameter_w > blk_diameter_h
+    map = []
+    for block in blocks_map
 
-        ncount = w / blk_diameter_h
-        dcount = ncount - lines[0].length
-        extra = ""
-        for _ in [0...Math.floor(dcount / 2)]
+        lindex = 0
+        for line in block.split("\n")
 
-            extra += "."
+            if map.length <= lindex
 
-        for i in [0...lines.length]
+                map.push([])
 
-            lines[i] = extra + lines[i] + extra
+            rindex = 0
+            for ch in line
 
-        return [lines, blk_diameter_h / 2]
+                if map[lindex].length <= rindex
 
-    else
+                    map[lindex].push(parseInt(ch))
 
-        return [lines, blk_diameter_w / 2]
+                else
+
+                    map[lindex][rindex] += parseInt(ch)
+
+                rindex += 1
+
+            lindex += 1
+
+    block_diameter = Math.min(w / map[0].length, h / map.length / 4 * 3)
+    return [map, block_diameter / 2]
+
 
 balls_count = 1
 
@@ -260,15 +265,16 @@ init = () ->
     ctx.canvas.width = w
     ctx.canvas.height = h
 
-    [blocks, radius] = resize_blocks(blocks_map, w, h)
+    [blocks, radius] = parse_blocks(blocks_map, w, h)
+    sx = (w - blocks[0].length * 2 * radius) / 2
+    sy = (h - blocks.length * 2 * radius) / 2
+
     objects = [].concat(
         new Background("#293134"),
-        Block.build_blocks_from_map(blocks, 0, 0, radius),
+        Block.build_blocks_from_map(blocks, sx, sy, radius),
     )
 
-    for _ in [0...1]
-
-        objects.push(generate_ball(radius, w, h))
+    objects.push(generate_ball(radius, w, h))
 
     g = new Scene(
         ctx,
